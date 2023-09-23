@@ -14,7 +14,8 @@ def ID3(
     dataframe,
     label_attribute,
     attribute_values=None, # dictionary of attributes in dataframe to values each attribute can take on
-    binary_purity_metric=majority_error
+    binary_purity_metric=majority_error,
+    max_depth=6
 ):
 
     assert(type(dataframe)==pd.DataFrame)
@@ -25,53 +26,64 @@ def ID3(
         attributes.remove(label_attribute) # don't compte gain of labels column on labels...
         attribute_values = {k:np.unique(dataframe[k]) for k in attributes }
     
+#    print(attribute_values)
     return __ID3__(
-        dataframe = dataframe.drop(label_attribute, axis=1),
+        dataframe = dataframe.drop(columns=label_attribute),
         attribute_values = attribute_values,
         labels = np.array( # make sure labels is a np array
              dataframe[label_attribute]
         ),
-        binary_purity_metric=binary_purity_metric
+        binary_purity_metric=binary_purity_metric,
+        max_depth=max_depth
     )
 
-def __ID3__(dataframe, attribute_values, labels, binary_purity_metric):
+def __ID3__(dataframe, attribute_values, labels, binary_purity_metric, max_depth):
+
+    if max_depth<=0:
+        return most_common_label(labels)
     
     uniq = np.unique(labels)
     
     if len(uniq)<=1:
+#        print(uniq, len(labels))
         return uniq[0] # return the only label
     
-    if len(attribute_values)==0: # attributes empty
-        # find most common label
-        return most_common_label(labels)
+#    print(len(dataframe.columns), max_depth)
+    match len(dataframe.columns):
+        case 0: # attributes empty
+            # find most common label
+            return most_common_label(labels)
+        case 1: # only one attribute, can skip computing gain
+            A = dataframe.columns[0]
+        case _: # many attributes, compute gain
+            gain = binary_gain(dataframe, labels, attribute_values, binary_purity_metric=binary_purity_metric)
+
+            keys = []
+            values = []
+            for k in gain:
+                keys.append(k)
+                values.append(gain[k])
+            
+            A = keys[np.argmax(values)] # max gain attribute
     
     root_node = {}
     
-    gain = binary_gain(dataframe, labels, attribute_values, binary_purity_metric=binary_purity_metric)
-    
-    keys = []
-    values = []
-    for k in gain:
-        keys.append(k)
-        values.append(gain[k])
-    
-    A = keys[np.argmax(values)] # max gain attribute
-    
     for k in attribute_values[A]:
-#        print(A+'='+k)
         
         subset = dataframe[A]==k
-        subdataframe = dataframe[subset].drop(A, axis=1)
+        subdataframe = dataframe[subset]
         
         if len(subdataframe)==0: # S_v is empty
-            # add leaf node with most common value of Lable in S
+            # add leaf node with most common value of Label in S
+#            print(subdataframe, labels)
             return most_common_label(labels)
         
-        root_node[A+'='+k] = __ID3__(
-            subdataframe,
+        root_node[A+'='+str(k)] = __ID3__(
+            subdataframe.drop(columns=A, inplace=False),
             attribute_values, # don't need to prune attributes, gain computation should ignore attributes not in S
             labels[subset],
-            binary_purity_metric=binary_purity_metric
+            binary_purity_metric=binary_purity_metric,
+            max_depth=max_depth-1
         )
     
     return root_node

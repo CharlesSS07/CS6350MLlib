@@ -52,16 +52,12 @@ def majority_error(x):
 
     return shares[majority_label_idx]
 
-def binary_gini_index(x):
+def gini_index(x):
 
     x = np.array(x)
 
     # make sure x are 1-d, and boolean
     assert(len(x.shape)==1)
-    assert(x.dtype==bool)
-
-    p_pos = np.sum(x)/len(x)
-    p_neg = 1 - p_pos
-
-    return 1 - (p_pos**2 + p_neg**2)
+    
+    return 1 - sum([ np.sum(x==i)/len(x) for i in np.unique(x) ])
 
