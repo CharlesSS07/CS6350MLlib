@@ -27,7 +27,6 @@ def ID3(
         attributes.remove(label_attribute) # don't compte gain of labels column on labels...
         attribute_values = {k:np.unique(dataframe[k]) for k in attributes }
     
-#    print(attribute_values)
     return __ID3__(
         dataframe = dataframe.drop(columns=label_attribute),
         attribute_values = attribute_values,
@@ -47,10 +46,8 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
     uniq = np.unique(labels)
     
     if len(uniq)<=1:
-#        print(uniq, len(labels))
         return uniq[0] # return the only label
     
-#    print(len(dataframe.columns), max_depth)
     match len(dataframe.columns):
         case 0: # attributes empty
             # find most common label
@@ -83,16 +80,37 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
         
         if len(subdataframe)==0: # S_v is empty
             # add leaf node with most common value of Label in S
-#            print(subdataframe, labels)
-            return most_common_label(labels)
-        
-        root_node[A+'='+str(k)] = __ID3__(
-            subdataframe.drop(columns=A, inplace=False),
-            attribute_values, # don't need to prune attributes, gain computation should ignore attributes not in S
-            labels[subset],
-            label_values=label_values,
-            purity_metric=purity_metric,
-            max_depth=max_depth-1
-        )
+            root_node[A+'='+str(k)] = most_common_label(labels)
+        else:
+            root_node[A+'='+str(k)] = __ID3__(
+                subdataframe.drop(columns=A, inplace=False),
+                attribute_values, # don't need to prune attributes, gain computation should ignore attributes not in S
+                labels[subset],
+                label_values=label_values,
+                purity_metric=purity_metric,
+                max_depth=max_depth-1
+            )
     
     return root_node
+
+def check_example(example, id3_node, label_attribute):
+    global errors
+    if type(id3_node)!=dict:
+        if not example[label_attribute]==id3_node:
+            return False
+        return True
+    
+    keys = list(id3_node.keys())
+    
+    attribute = keys[0].split('=')[0]
+    
+    value = example[attribute]
+    
+    return check_example(example, id3_node[attribute+'='+value], label_attribute)
+
+def error(dataframe, model, label_attribute):
+    error = 0
+    for index, row in dataframe.iterrows():
+        if not check_example(row, model, label_attribute):
+            error+=1
+    return error/len(dataframe)

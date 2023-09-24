@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 
 import sys
-sys.path.append('../')
+sys.path.append('../../')
 
-from ID3 import ID3
+from DecisionTree.ID3 import ID3
 from DecisionTree.purity import entropy, majority_error, gini_index
 
 def check_example(example, node):
@@ -31,12 +31,12 @@ def compute_error(dataframe, model):
     return error/len(dataframe)
 
 train = pd.read_csv(
-    '../data/car-4/train.csv',
+    '../../data/car-4/train.csv',
     names=['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'label']
 )
 
 test = pd.read_csv(
-    '../data/car-4/test.csv',
+    '../../data/car-4/test.csv',
     names=['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'label']
 )
 
@@ -82,9 +82,9 @@ for i in [1, 2, 3, 4, 5, 6]:
     
     del model
     
-entropy_results.to_csv('./HW_1_part2_2b_entropy.csv')
-majority_error_results.to_csv('./HW_1_part2_2b_majority_error.csv')
-gini_index_results.to_csv('./HW_1_part2_2b_gini_index.csv')
+entropy_results.to_csv('./results/HW_1_part2_2b_entropy.csv')
+majority_error_results.to_csv('./results/HW_1_part2_2b_majority_error.csv')
+gini_index_results.to_csv('./results/HW_1_part2_2b_gini_index.csv')
 
 print('Information Gain (Entropy) Error Results')
 print(entropy_results)
