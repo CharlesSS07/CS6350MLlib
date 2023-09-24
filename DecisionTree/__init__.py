@@ -1,4 +1,3 @@
 
-import DecisionTree.gain as gain
-import DecisionTree.purity_metrics as purity_metrics
+import DecisionTree.purity as purity
 import DecisionTree.ID3 as ID3

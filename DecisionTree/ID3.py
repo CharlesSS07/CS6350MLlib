@@ -2,8 +2,8 @@
 import pandas as pd
 import numpy as np
 
-from DecisionTree.gain import binary_gain
-from DecisionTree.purity_metrics import majority_error
+from DecisionTree.purity import purity
+from DecisionTree.purity import majority_error
 
 def most_common_label(labels):
     uniq = np.unique(labels)
@@ -13,8 +13,9 @@ def most_common_label(labels):
 def ID3(
     dataframe,
     label_attribute,
+    label_values,
     attribute_values=None, # dictionary of attributes in dataframe to values each attribute can take on
-    binary_purity_metric=majority_error,
+    purity_metric=majority_error,
     max_depth=6
 ):
 
@@ -33,11 +34,12 @@ def ID3(
         labels = np.array( # make sure labels is a np array
              dataframe[label_attribute]
         ),
-        binary_purity_metric=binary_purity_metric,
+        label_values=label_values,
+        purity_metric=purity_metric,
         max_depth=max_depth
     )
 
-def __ID3__(dataframe, attribute_values, labels, binary_purity_metric, max_depth):
+def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, max_depth):
 
     if max_depth<=0:
         return most_common_label(labels)
@@ -56,13 +58,19 @@ def __ID3__(dataframe, attribute_values, labels, binary_purity_metric, max_depth
         case 1: # only one attribute, can skip computing gain
             A = dataframe.columns[0]
         case _: # many attributes, compute gain
-            gain = binary_gain(dataframe, labels, attribute_values, binary_purity_metric=binary_purity_metric)
+            ip = purity(
+                S=dataframe,
+                y=labels,
+                A_values=attribute_values,
+                y_values=label_values,
+                purity_metric=purity_metric
+            )
 
             keys = []
             values = []
-            for k in gain:
+            for k in ip:
                 keys.append(k)
-                values.append(gain[k])
+                values.append(ip[k])
             
             A = keys[np.argmax(values)] # max gain attribute
     
@@ -82,7 +90,8 @@ def __ID3__(dataframe, attribute_values, labels, binary_purity_metric, max_depth
             subdataframe.drop(columns=A, inplace=False),
             attribute_values, # don't need to prune attributes, gain computation should ignore attributes not in S
             labels[subset],
-            binary_purity_metric=binary_purity_metric,
+            label_values=label_values,
+            purity_metric=purity_metric,
             max_depth=max_depth-1
         )
     
