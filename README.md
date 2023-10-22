@@ -19,16 +19,17 @@ Also, note that this project will require a working installation of pandas and n
 from DecisionTree.ID3 import ID3
 from DecisionTree.purity import entropy, majority_error, gini_index
 
+# Load in data
 import pandas as pd
-
 train = pd.DataFrame(...)
 
+# Train a ID3 Decision Tree
 model = ID3(
     dataframe=train,
     label_attribute='label', # the attribute in the dataframe which you are using as a label
     label_values=['unacc', 'acc', 'good', 'vgood'], # the possible values of label_attribute
     # attribute_values={'attribute':['A', 'B', 'C', ...]} (optional), used to outline attributes/values missing from dataframe, which are not the label attribute/values
-    purity_metric=entropy, # the algorithim for measuring purity, used for information gain, etc.
+    purity_metric=entropy, # the algorithim for measuring purity, used for information gain, etc. Import purity measures from DecisionTree.purity (entropy, majority_error, gini_index, ...) or use any function here
     max_depth=i # depth to stop growing this tree at
 )
 
