@@ -55,13 +55,12 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
         return uniq[0] # return the only label
     
     column_count = len(dataframe.columns)
-    match (column_count):
-        case (0): # attributes empty
-            # find most common label
-            return most_common_label(labels, example_weights)
-        case 1: # only one attribute, can skip computing gain
+    if column_count==0: # attributes empty
+        # find most common label
+        return most_common_label(labels, example_weights)
+    elif column_count==1: # only one attribute, can skip computing gain
             A = dataframe.columns[0]
-        case _: # many attributes, compute gain
+    else: # many attributes, compute gain
             ip = purity(
                 S=dataframe,
                 y=labels,
