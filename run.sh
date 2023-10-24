@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-pip install tqdm
-pip install pandas
+python3 -m pip install tqdm
+python3 -m pip install pandas
 
 # cd HWs/HW_1/
 
@@ -23,6 +23,6 @@ pip install pandas
 cd HWs/HW_2
 
 echo $(pwd)
-# python HW_2_part2_2a.py
+python3 HW_2_part2_2a.py
 
-python HW_2_part2_2a_plotting.py
+python3 HW_2_part2_2a_plotting.py
