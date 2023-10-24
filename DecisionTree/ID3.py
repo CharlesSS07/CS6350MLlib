@@ -5,9 +5,13 @@ import numpy as np
 from DecisionTree.purity import purity
 from DecisionTree.purity import majority_error
 
-def most_common_label(labels):
+def most_common_label(labels, label_weights=None):
     uniq = np.unique(labels)
-    shares = [sum(labels==l) for l in uniq]
+    if label_weights is None:
+        shares = [sum(labels==l) for l in uniq]
+    else:
+        assert len(label_weights)==len(labels)
+        shares = [sum(label_weights[labels==l]) for l in uniq]
     return uniq[np.argmax(shares)]
 
 def ID3(
@@ -16,7 +20,8 @@ def ID3(
     label_values,
     attribute_values=None, # dictionary of attributes in dataframe to values each attribute can take on
     purity_metric=majority_error,
-    max_depth=6
+    max_depth=6,
+    example_weights=None
 ):
 
     assert(type(dataframe)==pd.DataFrame)
@@ -35,13 +40,14 @@ def ID3(
         ),
         label_values=label_values,
         purity_metric=purity_metric,
-        max_depth=max_depth
+        max_depth=max_depth,
+        example_weights=example_weights
     )
 
-def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, max_depth):
+def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, max_depth, example_weights=None):
 
     if max_depth<=0:
-        return most_common_label(labels)
+        return most_common_label(labels, example_weights)
     
     uniq = np.unique(labels)
     
@@ -51,7 +57,7 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
     match len(dataframe.columns):
         case 0: # attributes empty
             # find most common label
-            return most_common_label(labels)
+            return most_common_label(labels, example_weights)
         case 1: # only one attribute, can skip computing gain
             A = dataframe.columns[0]
         case _: # many attributes, compute gain
@@ -60,7 +66,8 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
                 y=labels,
                 A_values=attribute_values,
                 y_values=label_values,
-                purity_metric=purity_metric
+                purity_metric=purity_metric,
+                example_weights=example_weights
             )
 
             keys = []
@@ -80,7 +87,7 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
         
         if len(subdataframe)==0: # S_v is empty
             # add leaf node with most common value of Label in S
-            root_node[A+'='+str(k)] = most_common_label(labels)
+            root_node[A+'='+str(k)] = most_common_label(labels, example_weights)
         else:
             root_node[A+'='+str(k)] = __ID3__(
                 subdataframe.drop(columns=A, inplace=False),
@@ -88,7 +95,8 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
                 labels[subset],
                 label_values=label_values,
                 purity_metric=purity_metric,
-                max_depth=max_depth-1
+                max_depth=max_depth-1,
+                example_weights=example_weights[subset] if not example_weights is None else None
             )
     
     return root_node

@@ -6,6 +6,7 @@ a) Modify your decision tree learning algorithm to learn decision stumps — tre
 Steps:
 
 -[x] Get a decision stump working on banking data w/ information gain
+-[x] Make decision stumps support weighted training examples
 -[x] Implement AdaBoost algorithim
 -[ ] Graph training & testing error plots
 
@@ -13,6 +14,7 @@ Steps:
 
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 import sys
 sys.path.append('../../')
@@ -101,10 +103,10 @@ model = ID3(
     bank_data_values['y'],
     attribute_values=bank_data_values,
     purity_metric=entropy,
-    max_depth=2
+    max_depth=1
 )
 
-def flatten_labels(label):
+def binarize_labels(label):
     if label=='yes':
         return 1
     if label=='no':
@@ -121,7 +123,7 @@ class BoostableDecisionTreeClassifier(AbstractWeakBoostableClassifier):
         
         while True:
             if not type(node)==dict:
-                return flatten_labels(node)
+                return binarize_labels(node)
             keys = list(node.keys())
             attribute = keys[0].split('=')[0]
             # breakpoint()
@@ -129,25 +131,124 @@ class BoostableDecisionTreeClassifier(AbstractWeakBoostableClassifier):
             
             node = node[attribute+'='+str(value)]
 
-def find_classifier_callback(data):
+def find_classifier_callback(examples, example_weights):
     model = ID3(
-        data,
+        examples,
         'y',
         bank_data_values['y'],
         attribute_values=bank_data_values,
         purity_metric=entropy,
-        max_depth=2 # make this a stump
+        max_depth=2, # just a stump
+        example_weights=example_weights
     )
     return BoostableDecisionTreeClassifier(model)
 
+def measure_training_and_testing_errors(classifier):
+    testing_errors = 0
+    for i, row in test_discretized.iterrows():
+        if binarize_labels(row['y'])!=classifier.predict(row):
+            testing_errors+=1
+            
+    training_errors = 0
+    for i, row in train_discretized.iterrows():
+        if binarize_labels(row['y'])!=classifier.predict(row):
+            training_errors+=1
+    
+    return testing_errors, training_errors
+
+boosted_results = pd.DataFrame(columns=['iterations', 'training_error', 'testing_error'])
+
+max_iteration = 500
+
+# slow way
+# for i, iterations in enumerate([*range(1, 20), 40, 60, 80, 100, 150, 200, 300, 400, 500]):
+    
+#     print('Iterations:', iterations)
+    
+#     b = Booster(
+#         find_classifier_callback=find_classifier_callback,
+#         iterations=iterations,
+#         labels=list(map(binarize_labels, train_discretized['y'])),
+#         data=train_discretized
+#     )
+    
+#     testing_errors, training_errors = measure_training_and_testing_errors(b)
+    
+#     boosted_results.loc[i] = [iterations, testing_errors, training_errors]
+    
+#     del b
+
+# only need to train one classifier with 500 iterations, and can then truncate alphas and classifiers lists
+
+# fast way
 b = Booster(
     find_classifier_callback=find_classifier_callback,
-    iterations=10,
-    labels=list(map(flatten_labels, train_discretized['y'])),
+    iterations=max_iteration,
+    labels=list(map(binarize_labels, train_discretized['y'])),
     data=train_discretized
 )
 
-for i, row in test_discretized.iterrows():
-    print(flatten_labels(row['y']), flatten_labels(row['y'])==b.predict(row))
+# This is an optimization so that evaluating error for every t from 0 to 500 is not painstaking
+# It basically pre-processes the raw predictions for every single subclassifier into a format
+# which makes evaluating the boosted prediction given only the classifiers from 0 to iterations
+# really easy and fast. Reduces the number of redundant calculations.
+subclassifier_training_preds = np.array(
+    [
+        np.multiply(
+            b.alphas,
+            [
+                h(x)
+                for h in b.classifiers
+            ]
+        )
+        for _,x in train_discretized.iterrows()
+    ]
+).T
+labels_training = np.array(
+    [binarize_labels(row['y']) for _,row in train_discretized.iterrows()])
 
-print(b.alphas)
+subclassifier_test_preds = np.array(
+    [
+        np.multiply(
+            b.alphas,
+            [
+                h(x)
+                for h in b.classifiers
+            ]
+        )
+        for _,x in test_discretized.iterrows()
+    ]
+).T
+labels_testing = np.array(
+    [binarize_labels(row['y']) for _,row in test_discretized.iterrows()])
+
+for i, iterations in tqdm(list(enumerate(range(1, max_iteration))), desc='Evaluating Boosted Classifiers'):
+    
+    testing_errors = np.sum(
+        [ p_i!=y_i for p_i, y_i in zip(
+            np.sign(np.sum(
+                subclassifier_test_preds[:iterations], axis=0
+            )), labels_testing) ])
+    training_errors = np.sum(
+        [ p_i!=y_i for p_i, y_i in zip(
+            np.sign(np.sum(
+                subclassifier_training_preds[:iterations], axis=0
+            )), labels_testing) ])
+    
+    boosted_results.loc[i] = [iterations, testing_errors, training_errors]
+    
+boosted_results.to_csv('./results/HW_2_part2_2a_errors_to_iterations.csv')
+# See Plot HW_2_part2_2a_results.ipynb notebook for plotting of above data.
+
+classifier_errors = pd.DataFrame(columns=['classifier', 'training_error', 'testing_error'])
+
+# Because the boosted model with 500 classifier shares 499 of its classifiers with the boosted model with 499 classifiers, and etc. down to 1, we can just use the final boosted models classifiers and evaluate the errors to get the second plot
+for i, c in tqdm(list(enumerate(b.classifiers)), desc='Evaluating Booster SubClassifiers'):
+    
+    testing_errors, training_errors = measure_training_and_testing_errors(c)
+    
+    classifier_errors.loc[i] = [i+1, testing_errors, training_errors]
+    
+classifier_errors.to_csv('./results/HW_2_part2_2a_classifier_errors.csv')
+
+# Plotting

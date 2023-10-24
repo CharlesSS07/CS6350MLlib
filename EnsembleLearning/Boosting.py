@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from tqdm.auto import tqdm
 
 class AbstractWeakBoostableClassifier:
     
@@ -23,35 +24,33 @@ class Booster:
         '''
         assert len(labels)==len(data), 'data does not match labels'
         
+        labels = np.array(labels, dtype=np.float64)
+        
         self.classifiers = []
         self.alphas = []
 
         m = data.shape[0]
+        D = np.ones(m, dtype=np.float64)/m # initializing weights to 1/m
 
-        D = np.ones(m)/m # initializing weights to 1/m
-
-        for iteration in range(iterations):
-            classifier = find_classifier_callback(data)
+        for iteration in tqdm(list(range(iterations)), desc='Training Boosted Classifier'):
+            classifier = find_classifier_callback(data, D)
             self.classifiers.append(classifier)
             
-            preds = list(map(classifier, data.iloc))
+            preds = np.array([classifier(x) for _,x in data.iterrows()], dtype=np.float64)
             
-            epsilon = (1/2) - ( (1/2) * np.sum([ D_i * y_i * p_i for D_i, y_i, p_i in zip(D, labels, preds) ]))
+            correct = np.multiply(labels, preds)
+            # correct should be - for incorrect, and + for correct predictions
+            
+            # epsilon = np.sum(D[correct<0])
+            epsilon = (1/2) - ( (1/2) * np.sum(np.multiply(D, correct)) )
             # from page 25 of https://users.cs.utah.edu/~zhe/teach/pdf/ensemble-learning.pdf
-
             alpha = (1/2) * np.log( (1-epsilon)/epsilon )
             # from page 54 of https://users.cs.utah.edu/~zhe/teach/pdf/ensemble-learning.pdf
             self.alphas.append(alpha)
             
             np.multiply(
                 D,
-                np.array(
-                    [
-                        np.exp( (-alpha) * y_i * p_i )
-                        for y_i, p_i in
-                        zip(labels, preds)
-                    ]
-                ),
+                np.exp( (-alpha) * correct ),
                 out=D
             )
             
@@ -62,11 +61,11 @@ class Booster:
         
         return np.sign(np.sum(
             [
-                a_i*p_i
-                for a_i, p_i in
+                a_i*h_x
+                for a_i, h_x in
                 zip(
                     self.alphas,
-                    map(lambda c:c(x), self.classifiers)
+                    map(lambda h:h(x), self.classifiers)
                 )
             ]
         ))
