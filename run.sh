@@ -22,6 +22,7 @@ pip install pandas
 
 cd HWs/HW_2
 
-python HW_2_part2_2a.py
+echo $(pwd)
+# python HW_2_part2_2a.py
 
 python HW_2_part2_2a_plotting.py
