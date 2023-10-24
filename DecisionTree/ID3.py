@@ -56,7 +56,7 @@ def __ID3__(dataframe, attribute_values, labels, label_values, purity_metric, ma
     
     column_count = len(dataframe.columns)
     match (column_count):
-        case 0: # attributes empty
+        case (0): # attributes empty
             # find most common label
             return most_common_label(labels, example_weights)
         case 1: # only one attribute, can skip computing gain
