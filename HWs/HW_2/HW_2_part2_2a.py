@@ -97,14 +97,14 @@ test_discretized = replace_unknowns_with_majority_label(discretize_bank_data(pd.
 
 del train
 
-model = ID3(
-    train_discretized,
-    'y',
-    bank_data_values['y'],
-    attribute_values=bank_data_values,
-    purity_metric=entropy,
-    max_depth=1
-)
+# model = ID3(
+#     train_discretized,
+#     'y',
+#     bank_data_values['y'],
+#     attribute_values=bank_data_values,
+#     purity_metric=entropy,
+#     max_depth=1
+# )
 
 def binarize_labels(label):
     if label=='yes':
