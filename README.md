@@ -34,6 +34,8 @@ In the above example, we import my Decision Tree code, and give an example of se
 
 ## AdaBoost
 
+### Example
+
 ```python
 from DecisionTree.ID3 import ID3, error, most_common_label
 from DecisionTree.purity import entropy, majority_error, gini_index
@@ -85,3 +87,44 @@ b = Booster(
 
 print(b.predict()) # Display the predictions of the boosted decision tree.
 ```
+The boosted decision tree library (AdaBoost) works by allowing the user to specify the weak classifier to use for boosting. This is done by implementing a `BoostableDecisionTreeClassifier`, with logic for storing and predicting on a model, and then supplying a callback function (`find_classifier_callback`) in this case, which trains up a new classifier with the current weights (supplied to that function as shown). The `Booster` class trains up `iterations` many of the weak classifiers supplied by the callback function.
+
+## Perceptrons
+
+### Example
+
+```python
+from Perceptron.Perceptrons import StandardPerceptron
+from Perceptron.Perceptrons import VotedPerceptron
+from Perceptron.Perceptrons import AveragePerceptron
+
+import pandas as pd
+train = pd.DataFrame(...)
+
+# need to map labels from 0,1 to -1,1
+def map_labels(y01):
+    return 2 * (y01-0.5) # or whatever works for your data...
+
+sp = StandardPerceptron(
+    data=train[:,:-1],
+    labels=map_labels(train[:,-1]),
+    r=0.01,
+    T=10
+)
+
+vp = VotedPerceptron(
+    data=train[:,:-1],
+    labels=map_labels(train[:,-1]),
+    r=0.0001,
+    T=10
+)
+
+ap = AveragePerceptron(
+    data=train[:,:-1],
+    labels=map_labels(train[:,-1]),
+    r=0.0001,
+    T=10
+)
+```
+
+In this example, we start out by importing the classes for the standard, voted, and average perceptrons, and then training up one of each of these classes of perceptron on some data, with some parameters which could make sense.
