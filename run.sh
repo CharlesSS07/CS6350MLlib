@@ -25,11 +25,14 @@ echo
 # python3.9 HW_2_part2_2a.py
 # python3.9 HW_2_part2_2a_plotting.py
 
-cd HWs/HW_3
-python3.9 HW_3_part2_2a.py
-echo
-echo
-python3.9 HW_3_part2_2b.py
-echo
-echo
-python3.9 HW_3_part2_2c.py
+# cd HWs/HW_3
+# python3.9 HW_3_part2_2a.py
+# echo
+# echo
+# python3.9 HW_3_part2_2b.py
+# echo
+# echo
+# python3.9 HW_3_part2_2c.py
+
+cd HWs/HW_4
+python3.9 HW_4_part2_2a.py
