@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-python3.9 -m pip install tqdm
+# python3.9 -m pip install tqdm
 python3.9 -m pip install pandas
+python3.9 -m pip install matplotlib
+echo
+echo
 echo
 echo
 
@@ -34,5 +37,9 @@ echo
 # echo
 # python3.9 HW_3_part2_2c.py
 
-cd HWs/HW_4
-python3.9 HW_4_part2_2a.py
+# cd HWs/HW_4
+# python3.9 HW_4_part2_2a.py
+
+cd HWs/HW_5
+# python3.9 HW_5_part2_2a.py
+python3.9 HW_5_part2_2b.py
