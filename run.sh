@@ -41,5 +41,6 @@ echo
 # python3.9 HW_4_part2_2a.py
 
 cd HWs/HW_5
-# python3.9 HW_5_part2_2a.py
+python3.9 HW_5_part2_2a.py
 python3.9 HW_5_part2_2b.py
+python3.9 HW_5_part2_2c.py
