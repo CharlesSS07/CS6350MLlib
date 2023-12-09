@@ -1,6 +1,12 @@
 # CS6350MLlib
 This is a machine learning library developed by CHARLES STRAUSS for CS6350 at the University of Utah
 
+## Answer to Question 4
+I find my own machine learning library has taught me quite a bit more than I had anticipated, about ML, and the guts of these algorithims. Before I had a way of weilding them. Now, I at least have an inklining of an understanding of what happens under the hood.
+
+![Figure_1](https://github.com/CharlesSS07/CS6350MLlib/assets/48863875/cc82c3a3-744e-43dd-ad08-1d2ef4eed5bc)
+The above photo pictures the result of HW5/Q2c which asked about using zero as an initializer rather than the gaussian initializer. The zero initializer works well but falls into the same local minima each time. This is a downsides if you intend to train many of these and want the variation amongst runs.
+
 # Documentation
 
 ## Decision Trees
